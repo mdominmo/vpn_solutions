@@ -1,0 +1,29 @@
+services:
+  headscale:
+    image: ${HEADSCALE_IMAGE:-ghcr.io/juanfont/headscale:0.29.3}
+    container_name: headscale
+    command: serve
+    restart: unless-stopped
+    ports:
+      - "${HEADSCALE_HTTP_BIND:-127.0.0.1:8080}:8080"
+      - "${HEADSCALE_METRICS_BIND:-127.0.0.1:9090}:9090"
+    volumes:
+      - ./config:/etc/headscale
+      - ./data/lib:/var/lib/headscale
+      - ./data/run:/var/run/headscale
+
+  caddy:
+    profiles:
+      - public
+    image: caddy:2.10.2-alpine
+    container_name: headscale-caddy
+    restart: unless-stopped
+    depends_on:
+      - headscale
+    ports:
+      - "${CADDY_HTTP_BIND:-0.0.0.0:80}:80"
+      - "${CADDY_HTTPS_BIND:-0.0.0.0:443}:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./caddy_data:/data
+      - ./caddy_config:/config

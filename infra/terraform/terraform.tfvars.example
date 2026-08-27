@@ -1,0 +1,9 @@
+server_name          = "headscale-vps"
+server_type          = "cx23"
+server_location      = "fsn1"
+server_image         = "ubuntu-24.04"
+ssh_key_name         = "headscale-admin"
+ssh_public_key_path  = "generated/admin_key.pub"
+headscale_domain     = ""
+tailscale_base_domain = "tailnet.local"
+admin_allowed_cidrs  = ["0.0.0.0/0", "::/0"]

@@ -1,0 +1,13 @@
+control-plane/.env
+node/.env
+control-plane/data/
+node/state/
+control-plane/caddy_data/
+control-plane/caddy_config/
+infra/terraform/.env
+infra/terraform/.terraform/
+infra/terraform/.terraform.lock.hcl
+infra/terraform/terraform.tfstate
+infra/terraform/terraform.tfstate.*
+infra/terraform/terraform.tfvars
+infra/terraform/generated/

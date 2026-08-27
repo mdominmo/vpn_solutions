@@ -1,0 +1,11 @@
+{
+  // Politica inicial de laboratorio: todos los nodos pueden hablar entre si.
+  // Endurecer esto antes de meter servicios sensibles.
+  "acls": [
+    {
+      "action": "accept",
+      "src": ["*"],
+      "dst": ["*:*"]
+    }
+  ]
+}

@@ -1,0 +1,59 @@
+#!/bin/bash
+set -euxo pipefail
+
+export DEBIAN_FRONTEND=noninteractive
+
+apt-get update
+apt-get install -y docker.io
+systemctl enable --now docker
+
+mkdir -p /opt/headscale/config
+mkdir -p /opt/headscale/data/lib
+mkdir -p /opt/headscale/data/run
+mkdir -p /opt/headscale/caddy_data
+mkdir -p /opt/headscale/caddy_config
+
+cat > /opt/headscale/config/config.yaml <<'EOF_CONFIG'
+${headscale_config}
+EOF_CONFIG
+
+cat > /opt/headscale/config/acl.hujson <<'EOF_ACL'
+${acl_content}
+EOF_ACL
+
+%{ if use_caddy ~}
+cat > /opt/headscale/Caddyfile <<'EOF_CADDY'
+${caddyfile_content}
+EOF_CADDY
+%{ endif ~}
+
+docker network inspect headscale-net >/dev/null 2>&1 || docker network create headscale-net
+docker rm -f headscale >/dev/null 2>&1 || true
+docker rm -f headscale-caddy >/dev/null 2>&1 || true
+
+docker pull ${headscale_image}
+docker run -d \
+  --name headscale \
+  --restart unless-stopped \
+  --network headscale-net \
+  -p ${headscale_bind} \
+  -p 127.0.0.1:9090:9090 \
+  -v /opt/headscale/config:/etc/headscale \
+  -v /opt/headscale/data/lib:/var/lib/headscale \
+  -v /opt/headscale/data/run:/var/run/headscale \
+  ${headscale_image} \
+  serve
+
+%{ if use_caddy ~}
+docker pull ${caddy_image}
+docker run -d \
+  --name headscale-caddy \
+  --restart unless-stopped \
+  --network headscale-net \
+  -p 80:80 \
+  -p 443:443 \
+  -v /opt/headscale/Caddyfile:/etc/caddy/Caddyfile:ro \
+  -v /opt/headscale/caddy_data:/data \
+  -v /opt/headscale/caddy_config:/config \
+  ${caddy_image}
+%{ endif ~}
