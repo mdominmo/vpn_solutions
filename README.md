@@ -66,7 +66,7 @@ Ejemplo:
 
 ```env
 TS_HOSTNAME=pc-remoto
-TS_AUTHKEY=tskey-client-xxxxxxxx
+TS_AUTHKEY=RELLENAR_CON_PREAUTH_KEY
 TS_EXTRA_ARGS=--login-server=https://vpn.midominio.com
 ```
 
