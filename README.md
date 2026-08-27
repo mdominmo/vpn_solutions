@@ -1,124 +1,123 @@
 # tail_scale_vpn
 
-`SSH` al PC remoto con:
+`SSH` al PC remoto usando:
 
-- `Headscale` en un VPS de Hetzner
-- `Tailscale` en Docker con `network_mode: host`
+- `Headscale` en un VPS
+- `Tailscale` en Docker en cada PC
 - `sshd` del host remoto
 
-## Flujo rapido
+## VPS
 
-### 1. En tu PC local: crear el VPS y desplegar `Headscale`
+Estos pasos se hacen `una sola vez`, por el `administrador`.
+
+### 1. Crear el VPS y desplegar `Headscale`
 
 ```bash
 ./scripts/bootstrap-hetzner-vps.sh
 ```
 
-El script:
-
-- pide los datos uno a uno
-- guarda la configuracion
-- pide confirmacion antes de crear nada
-- crea el VPS
-- despliega `Headscale` en Docker dentro del VPS
-
-### 2. En tu PC local: ver la URL de `Headscale`
+### 2. Ver la URL de `Headscale`
 
 ```bash
 ./scripts/iac.sh output
 ```
 
-Copia el valor de `headscale_url`.
+Coge:
 
-### 3. En tu PC local: crear usuario y `preauth key`
+- `headscale_url`
+- `vps_ipv4`
 
-Usa la IP del VPS que devuelve `./scripts/iac.sh output`:
+### 3. Crear el usuario
 
 ```bash
 export HEADSCALE_SSH_TARGET=root@IP_DEL_VPS
 ./scripts/headscale-users-create.sh vpnops
+```
+
+Esto normalmente se hace `una sola vez`.
+
+## Cada PC
+
+Estos pasos se repiten `en cada equipo` que quieras unir a la VPN, incluido tu `PC local` si tambien quieres meterlo en la red.
+
+### 1. Generar una clave para ese PC
+
+Este paso lo hace el `administrador`:
+
+```bash
+export HEADSCALE_SSH_TARGET=root@IP_DEL_VPS
 ./scripts/headscale-preauthkey-create.sh 1
 ```
 
-### 4. En cada PC que quieras unir a la red: preparar la carpeta `node/`
+La salida es la `TS_AUTHKEY` de ese PC.
 
-`node/` es la carpeta de este repositorio que contiene la configuracion del cliente `Tailscale` de cada PC.
+`TS_AUTHKEY` la genera el `administrador`. El equipo remoto no la genera: solo la usa en su `node/.env`.
+
+Ese `1` es el `user_id` de `Headscale`.
+
+- Si todos los equipos cuelgan del mismo usuario, puede seguir siendo `1`.
+- Si usas otro usuario, cambia ese numero por su `user_id`.
+- La `TS_AUTHKEY` si debes generarla de nuevo para cada equipo.
+
+### 2. Preparar ese PC
+
+Este paso se hace `en ese PC`:
 
 ```bash
 ./scripts/node-host-preflight.sh
-```
-
-Este comando comprueba si ese PC tiene lo necesario para arrancar `Tailscale` en Docker.
-
-```bash
 cp node/.env.example node/.env
 ```
 
-Este comando crea `node/.env`, que es el archivo real de configuracion de ese PC, a partir de la plantilla [node/.env.example](/home/manuel/repositories/own/tail_scale_vpn/node/.env.example:1).
-
-Despues edita `node/.env` y ajusta:
-
-- `TS_HOSTNAME`: nombre que tendra ese PC dentro de la red Tailscale. Lo eliges tu. Usa uno distinto por equipo, por ejemplo `pc-casa` o `pc-remoto`
-- `TS_AUTHKEY`: clave de alta que genera `Headscale` para registrar ese nodo
-- `TS_EXTRA_ARGS=--login-server=URL_DE_HEADSCALE`: URL de tu servidor `Headscale`
-
-Ejemplo:
+Edita `node/.env`:
 
 ```env
 TS_HOSTNAME=pc-remoto
 TS_AUTHKEY=RELLENAR_CON_PREAUTH_KEY
-TS_EXTRA_ARGS=--login-server=https://vpn.midominio.com
+TS_EXTRA_ARGS=--login-server=http://IP_DEL_VPS:8080
 ```
 
-Repite este paso en cada equipo. Si tambien quieres que tu PC local entre en la red Tailscale, crea ahi su propio `node/.env` con otro `TS_HOSTNAME`, por ejemplo `pc-casa`.
+Que es cada variable:
 
-### 5. En cada PC: levantar el nodo
+- `TS_HOSTNAME`: nombre de ese PC dentro de Tailscale. Lo eliges tu y debe ser distinto en cada equipo.
+- `TS_AUTHKEY`: clave generada para ese PC en el paso anterior.
+- `TS_EXTRA_ARGS`: URL de tu `Headscale`.
 
-Este es el momento en que ese PC entra en la VPN.
+### 3. Conectar ese PC a la VPN
+
+Este es el paso en el que `ese PC entra en la VPN`:
 
 ```bash
 docker compose -f node/docker-compose.yml up -d
 ./scripts/node-host-status.sh
 ```
 
-Haz este paso:
+## Probar SSH
 
-- una vez en tu PC local
-- y otra vez en el PC remoto
+Cuando `tu PC local` y `el PC remoto` ya hayan hecho los pasos de `Cada PC`:
 
-### 6. En tu PC local: probar `SSH`
+1. Saca la IP Tailscale del remoto:
 
-Desde otro equipo unido a la misma tailnet:
+```bash
+docker compose -f node/docker-compose.yml exec tailscale tailscale ip -4
+```
+
+2. Desde el equipo desde el que quieras conectarte:
 
 ```bash
 ssh usuario@100.x.y.z
 ```
 
-## Donde se ejecuta cada cosa
+## Repetir pasos
 
-- Tu PC local:
-  `./scripts/bootstrap-hetzner-vps.sh`
-  `./scripts/iac.sh output`
-  `export HEADSCALE_SSH_TARGET=root@IP_DEL_VPS`
-  `./scripts/headscale-users-create.sh vpnops`
-  `./scripts/headscale-preauthkey-create.sh 1`
-  `cp node/.env.example node/.env`
-  `docker compose -f node/docker-compose.yml up -d`
-  `./scripts/node-host-status.sh`
-  `ssh usuario@100.x.y.z`
-
-- VPS de Hetzner:
-  no ejecutas pasos manuales normales
-  `bootstrap-hetzner-vps.sh` despliega ahi `Headscale` automaticamente en Docker
-
-- PC remoto:
-  `./scripts/node-host-preflight.sh`
-  `cp node/.env.example node/.env`
-  `docker compose -f node/docker-compose.yml up -d`
-  `./scripts/node-host-status.sh`
+- Puedes repetir `./scripts/node-host-preflight.sh` sin problema.
+- Puedes repetir `docker compose -f node/docker-compose.yml up -d` sin problema.
+- Debes repetir `./scripts/headscale-preauthkey-create.sh 1` por cada PC nuevo.
+- No copies el mismo `node/.env` entre varios equipos.
+- No uses el mismo `TS_HOSTNAME` en varios equipos.
+- Si haces `cp node/.env.example node/.env` otra vez, puedes machacar tu configuracion actual.
 
 ## Ficheros clave
 
 - [infra/terraform/main.tf](/home/manuel/repositories/own/tail_scale_vpn/infra/terraform/main.tf:1)
-- [scripts/bootstrap-hetzner-vps.sh](/home/manuel/repositories/own/tail_scale_vpn/scripts/bootstrap-hetzner-vps.sh:1)
 - [node/docker-compose.yml](/home/manuel/repositories/own/tail_scale_vpn/node/docker-compose.yml:1)
+- [node/.env.example](/home/manuel/repositories/own/tail_scale_vpn/node/.env.example:1)
