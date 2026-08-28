@@ -2,8 +2,8 @@
 This repository makes it easy to create a VPN network using the [Tail Scale]() client and the open source VPN server [Head Scale](). The infrastructure consists of the following components:
 - Remote Head Scale server: Provides a public IP without NAT. It is provisioned with [Terraform]() on the [Hetzner]() services platform.
 
-  > [!NOTE]
-  > To use Terraform and provision infrastructure on Hetzner, you need a Hetzner project API key.
+> [!NOTE]
+> To use Terraform and provision infrastructure on Hetzner, you need a Hetzner project API key.
 
 - Client machines: These are the VPN users. For now, a Linux OS is required (tested on Ubuntu 22/24). The required tools run in containers under [Docker Compose]().
 
