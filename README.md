@@ -1,4 +1,4 @@
-# Tail Scale VPN
+# VPN Solutions
 Three ways to set up a private VPN, so that your machines can reach each other (for example over SSH) from anywhere, without opening ports on their networks. Pick one: each directory has its own guide for the admin and for users.
 
 | | [Headscale](headscale/README.md) | [Tailscale SaaS](tailscale-saas/README.md) | [ZeroTier](zerotier/README.md) |
