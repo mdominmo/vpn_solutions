@@ -58,21 +58,21 @@ prompt_secret() {
 }
 
 prompt_secret "HCLOUD_TOKEN" "Hetzner API token"
-prompt_value "SSH_PUBLIC_KEY_SOURCE" "Ruta a tu clave publica SSH" "${HOME}/.ssh/id_ed25519.pub"
+prompt_value "SSH_PUBLIC_KEY_SOURCE" "Path to your SSH public key" "${HOME}/.ssh/id_ed25519.pub"
 
 if [[ ! -f "${SSH_PUBLIC_KEY_SOURCE}" ]]; then
-  echo "ERROR: no existe ${SSH_PUBLIC_KEY_SOURCE}" >&2
+  echo "ERROR: ${SSH_PUBLIC_KEY_SOURCE} does not exist" >&2
   exit 1
 fi
 
-prompt_value "SERVER_NAME" "Nombre del VPS" "headscale-vps"
-prompt_value "SERVER_LOCATION" "Location Hetzner" "fsn1"
-prompt_value "SERVER_TYPE" "Tipo de servidor" "cx23"
-prompt_value "SERVER_IMAGE" "Imagen del servidor" "ubuntu-24.04"
-prompt_value "SSH_KEY_NAME" "Nombre del SSH key en Hetzner" "headscale-admin"
-prompt_optional_value "HEADSCALE_DOMAIN" "Dominio publico para Headscale (deja vacio para usar IP:8080)" ""
-prompt_value "TAILSCALE_BASE_DOMAIN" "Dominio interno para MagicDNS" "tailnet.local"
-prompt_value "ADMIN_ALLOWED_CIDRS_RAW" "CIDRs permitidos para SSH al VPS, separados por coma" "0.0.0.0/0,::/0"
+prompt_value "SERVER_NAME" "VPS name" "headscale-vps"
+prompt_value "SERVER_LOCATION" "Hetzner location" "fsn1"
+prompt_value "SERVER_TYPE" "Server type" "cx23"
+prompt_value "SERVER_IMAGE" "Server image" "ubuntu-24.04"
+prompt_value "SSH_KEY_NAME" "Name of the SSH key in Hetzner" "headscale-admin"
+prompt_optional_value "HEADSCALE_DOMAIN" "Public domain for Headscale (leave empty to use IP:8080)" ""
+prompt_value "TAILSCALE_BASE_DOMAIN" "Internal domain for MagicDNS" "tailnet.local"
+prompt_value "ADMIN_ALLOWED_CIDRS_RAW" "CIDRs allowed to SSH into the VPS, comma separated" "0.0.0.0/0,::/0"
 
 cp "${SSH_PUBLIC_KEY_SOURCE}" "${GENERATED_DIR}/admin_key.pub"
 chmod 600 "${GENERATED_DIR}/admin_key.pub"
@@ -116,32 +116,32 @@ CIDR_LINES[$last_index]="${CIDR_LINES[$last_index]%,}"
 chmod 600 "${TFVARS_FILE}"
 
 echo
-echo "Resumen:"
+echo "Summary:"
 echo "  VPS: ${SERVER_NAME}"
 echo "  Location: ${SERVER_LOCATION}"
-echo "  Tipo: ${SERVER_TYPE}"
-echo "  Imagen: ${SERVER_IMAGE}"
+echo "  Type: ${SERVER_TYPE}"
+echo "  Image: ${SERVER_IMAGE}"
 if [[ -n "${HEADSCALE_DOMAIN}" ]]; then
   echo "  Headscale: https://${HEADSCALE_DOMAIN}"
 else
-  echo "  Headscale: http://<IP_DEL_VPS>:8080"
+  echo "  Headscale: http://<VPS_IP>:8080"
 fi
 echo "  MagicDNS: ${TAILSCALE_BASE_DOMAIN}"
 echo
 
-read -r -p "Quieres ejecutar 'init' y 'plan' ahora? [y/N]: " RUN_PLAN
+read -r -p "Run 'init' and 'plan' now? [y/N]: " RUN_PLAN
 if [[ "${RUN_PLAN}" =~ ^[Yy]$ ]]; then
   "${ROOT_DIR}/scripts/iac.sh" init
   "${ROOT_DIR}/scripts/iac.sh" plan
 fi
 
 echo
-read -r -p "Escribe PROVISIONAR para crear el VPS y desplegar Headscale: " CONFIRM_APPLY
-if [[ "${CONFIRM_APPLY}" == "PROVISIONAR" ]]; then
+read -r -p "Type PROVISION to create the VPS and deploy Headscale: " CONFIRM_APPLY
+if [[ "${CONFIRM_APPLY}" == "PROVISION" ]]; then
   "${ROOT_DIR}/scripts/iac.sh" init
   "${ROOT_DIR}/scripts/iac.sh" apply -auto-approve
   echo
   "${ROOT_DIR}/scripts/iac.sh" output
 else
-  echo "Provisionamiento cancelado."
+  echo "Provisioning cancelled."
 fi

@@ -1,0 +1,25 @@
+{
+  // Reference policy to paste into the Tailscale admin console (Access controls).
+  // Tailscale does not read this file: it is the versioned copy of what is in the console.
+
+  // Who can assign each tag. The OAuth client can only create
+  // keys for tags defined here.
+  "tagOwners": {
+    "tag:server": ["autogroup:admin"]
+  },
+
+  "acls": [
+    // People in the tailnet can reach any machine.
+    {
+      "action": "accept",
+      "src": ["autogroup:member"],
+      "dst": ["*:*"]
+    },
+    // Machines enrolled by script can reach each other.
+    {
+      "action": "accept",
+      "src": ["tag:server"],
+      "dst": ["tag:server:*"]
+    }
+  ]
+}

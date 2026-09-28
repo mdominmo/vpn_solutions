@@ -1,0 +1,17 @@
+name: zerotier
+
+services:
+  zerotier:
+    image: ${ZEROTIER_IMAGE:-zerotier/zerotier:1.14.2}
+    container_name: zerotier-node
+    network_mode: host
+    restart: unless-stopped
+    cap_add:
+      - net_admin
+      - sys_admin
+    devices:
+      - /dev/net/tun:/dev/net/tun
+    environment:
+      ZEROTIER_JOIN_NETWORKS: ${ZT_NETWORK_ID:-}
+    volumes:
+      - ./state:/var/lib/zerotier-one

@@ -4,9 +4,9 @@ set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
-read -r -p "Escribe DESTRUIR para eliminar el VPS y los recursos de Hetzner: " CONFIRM_DESTROY
-if [[ "${CONFIRM_DESTROY}" != "DESTRUIR" ]]; then
-  echo "Destruccion cancelada."
+read -r -p "Type DESTROY to delete the VPS and the Hetzner resources: " CONFIRM_DESTROY
+if [[ "${CONFIRM_DESTROY}" != "DESTROY" ]]; then
+  echo "Destruction cancelled."
   exit 0
 fi
 

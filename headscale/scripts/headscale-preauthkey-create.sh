@@ -2,9 +2,11 @@
 
 set -euo pipefail
 
+ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+
 if [[ $# -lt 1 || $# -gt 2 ]]; then
-  echo "Uso: $0 <user_id> [expiration]" >&2
-  echo "Ejemplo: $0 1 720h" >&2
+  echo "Usage: $0 <user_id> [expiration]" >&2
+  echo "Example: $0 1 720h" >&2
   exit 1
 fi
 
@@ -28,11 +30,11 @@ run_local() {
   elif command -v docker-compose >/dev/null 2>&1; then
     COMPOSE_CMD=(docker-compose)
   else
-    echo "No se ha encontrado ni 'docker compose' ni 'docker-compose'." >&2
+    echo "Neither 'docker compose' nor 'docker-compose' was found." >&2
     exit 1
   fi
 
-  "${COMPOSE_CMD[@]}" -f control-plane/docker-compose.yml exec headscale \
+  "${COMPOSE_CMD[@]}" -f "${ROOT_DIR}/control-plane/docker-compose.yml" exec headscale \
     headscale preauthkeys create --user "${USER_ID}" --reusable --expiration "${EXPIRATION}"
 }
 

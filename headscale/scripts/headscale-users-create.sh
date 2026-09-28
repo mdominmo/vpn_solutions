@@ -2,8 +2,10 @@
 
 set -euo pipefail
 
+ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+
 if [[ $# -ne 1 ]]; then
-  echo "Uso: $0 <username>" >&2
+  echo "Usage: $0 <username>" >&2
   exit 1
 fi
 
@@ -24,11 +26,11 @@ run_local() {
   elif command -v docker-compose >/dev/null 2>&1; then
     COMPOSE_CMD=(docker-compose)
   else
-    echo "No se ha encontrado ni 'docker compose' ni 'docker-compose'." >&2
+    echo "Neither 'docker compose' nor 'docker-compose' was found." >&2
     exit 1
   fi
 
-  "${COMPOSE_CMD[@]}" -f control-plane/docker-compose.yml exec headscale headscale users create "$1"
+  "${COMPOSE_CMD[@]}" -f "${ROOT_DIR}/control-plane/docker-compose.yml" exec headscale headscale users create "$1"
 }
 
 if [[ -n "${HEADSCALE_SSH_TARGET:-}" ]]; then

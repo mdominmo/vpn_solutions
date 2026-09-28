@@ -1,0 +1,11 @@
+{
+  // Initial lab policy: every node can talk to every other node.
+  // Tighten this before adding sensitive services.
+  "acls": [
+    {
+      "action": "accept",
+      "src": ["*"],
+      "dst": ["*:*"]
+    }
+  ]
+}

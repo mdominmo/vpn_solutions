@@ -8,12 +8,12 @@ ENV_FILE="${IAC_DIR}/.env"
 IAC_IMAGE="${IAC_IMAGE:-hashicorp/terraform:latest}"
 
 if [[ $# -eq 0 ]]; then
-  echo "Uso: $0 <init|plan|apply|output|destroy|fmt|validate> [args...]" >&2
+  echo "Usage: $0 <init|plan|apply|output|destroy|fmt|validate> [args...]" >&2
   exit 1
 fi
 
 if [[ ! -d "${IAC_DIR}" ]]; then
-  echo "ERROR: no existe ${IAC_DIR}" >&2
+  echo "ERROR: ${IAC_DIR} does not exist" >&2
   exit 1
 fi
 

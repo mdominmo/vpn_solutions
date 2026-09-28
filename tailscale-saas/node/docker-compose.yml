@@ -1,0 +1,25 @@
+name: tailscale-saas
+
+services:
+  tailscale:
+    image: ${TAILSCALE_IMAGE:-tailscale/tailscale:v1.98.8}
+    container_name: tailscale-saas-node
+    hostname: ${TS_HOSTNAME:-pc-01}
+    network_mode: host
+    restart: unless-stopped
+    cap_add:
+      - net_admin
+      - net_raw
+    devices:
+      - /dev/net/tun:/dev/net/tun
+    environment:
+      # Only set while enrolling (scripts/join.sh); never stored in .env.
+      TS_AUTHKEY: ${TS_AUTHKEY:-}
+      TS_AUTH_ONCE: "true"
+      TS_HOSTNAME: ${TS_HOSTNAME:-pc-01}
+      TS_STATE_DIR: /var/lib/tailscale
+      TS_ACCEPT_DNS: ${TS_ACCEPT_DNS:-false}
+      TS_USERSPACE: "false"
+      TS_EXTRA_ARGS: --advertise-tags=${TS_TAGS:-tag:server}
+    volumes:
+      - ./state:/var/lib/tailscale
